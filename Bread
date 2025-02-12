@@ -2,9 +2,9 @@
 import pandas as pd
 import numpy as np
 
-# ---------------------------
+# --------------------------
 # Bread Price Data Processing with Monthly Data
-# ---------------------------
+# --------------------------
 
 def process_bread_prices_with_monthly():
     """
