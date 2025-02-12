@@ -1,54 +1,46 @@
+"""
+File: hoopstatsapp.py
+
+The application for analyzing basketball stats.
+"""
+
+from hoopstatsview import HoopStatsView
 import pandas as pd
 
-def process_basketball_stats():
-    """
-    Cleans basketball statistics, processes makes-attempts columns, and computes statistics.
-    """
-    # Basketball statistics data
-    basketball_data = {
-        "MIN": [40, 34, 36, 46, 29],
-        "FG": ["20-9", "12-5", "10-4", "21-9", "9-4"],
-        "FG%": [45, 41.7, 40, 42.9, 44.4],
-        "3PT": ["6-2", "8-2", "5-1", "10-5", "5-2"],
-        "3P%": [33.3, 25, 20, 50, 40],
-        "FT": ["6-5", "4-4", "2-2", "6-5", "6-6"],
-        "FT%": [83.3, 100, 100, 83.3, 100],
-        "REB": [6, 3, 4, 7, 4],
-        "AST": [5, 2, 12, 2, 7],
-        "PTS": [25, 16, 11, 28, 16]
-    }
+def cleanStats(data_frame):
+ 
+    columns_to_split = ['FG', '3PT', 'FT']
+    new_columns = []  
 
-    # Convert dictionary to DataFrame
-    basketball_df = pd.DataFrame(basketball_data)
+    for col in columns_to_split:
+        makes_attempts = data_frame[col].str.split('-', expand=True)
+        
+        makes = makes_attempts[0].astype(int)
+        attempts = makes_attempts[1].astype(int)
 
-    # Function to clean basketball statistics
-    def clean_stats(df):
-        """
-        Cleans basketball statistics by splitting FG, 3PT, and FT columns
-        into separate "makes" and "attempts" columns.
-        """
-        for col in ["FG", "3PT", "FT"]:
-            if col in df.columns:
-                df[[f"{col}M", f"{col}A"]] = df[col].str.split("-", expand=True).astype(float)
-                df.drop(columns=[col], inplace=True)
-        return df
+        makes_col = col + 'M' 
+        attempts_col = col + 'A' 
 
-    # Apply cleaning function
-    basketball_df = clean_stats(basketball_df)
+        data_frame[makes_col] = makes
+        data_frame[attempts_col] = attempts
 
-    # Compute statistical values for Basketball Statistics
-    basketball_stats = basketball_df.describe().loc[["mean", "50%", "std"]]  # "50%" represents the median in describe()
+        new_columns.extend([makes_col, attempts_col])
 
-    # Rename index for clarity
-    basketball_stats.rename(index={"50%": "median"}, inplace=True)
+    data_frame = data_frame.drop(columns=columns_to_split)
 
-    # Display cleaned basketball data
-    print("\nCleaned Basketball Statistics:\n")
-    print(basketball_df.to_string(index=False))
+    reordered_columns = new_columns + [col for col in data_frame.columns if col not in new_columns]
+    data_frame = data_frame[reordered_columns]
 
-    # Display statistical analysis for basketball data
-    print("\nBasketball Statistics Summary (Mean, Median, Standard Deviation):\n")
-    print(basketball_stats.to_string(index=True))
+    return data_frame
 
-# Run the basketball statistics processing function
-process_basketball_stats()
+def main():
+    """Creates the data frame and view and starts the app."""
+
+    frame = pd.read_csv("cleanbrogdonstats.csv")
+    
+    frame = cleanStats(frame)
+    
+    HoopStatsView(frame).mainloop()
+
+if __name__ == "__main__":
+    main()
